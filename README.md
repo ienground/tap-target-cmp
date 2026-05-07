@@ -2,6 +2,7 @@
 tap-target-compose is a Compose Multiplatform implementation of the [Material Design tap targets](https://m1.material.io/growth-communications/feature-discovery.html#feature-discovery-design), used for feature discovery.
 
 This library was inspired by its View counterpart, [TapTargetView](https://github.com/KeepSafe/TapTargetView).
+This library is a forked version of [tap-target-compose](https://github.com/PierfrancescoSoffritti/tap-target-compose/), porting the original Android-only library for Compose Multiplatform. It currently targets Android and iOS, but since there is no separate native implementation, support for other platforms may be added upon pull requests or requests.
 
 |                                   |                               |
 |-----------------------------------|-------------------------------|
