@@ -1,3 +1,5 @@
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 pluginManagement {
   repositories {
     google()
@@ -13,7 +15,9 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "tap-target-compose"
-include(":sample-app")
-include(":tap-target-compose")
-include(":tap-target-cmp")
+rootProject.name = "tap-target-cmp"
+include(":example")
+include(":example:composeApp")
+include(":example:androidApp")
+//include(":tap-target-compose")
+include(":taptarget")
