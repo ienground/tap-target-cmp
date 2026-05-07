@@ -36,7 +36,7 @@ subprojects {
           developer {
             id = "ienground"
             name = "Ericano Rhee"
-            url = "my@ien.zone"
+            url = "https://www.ien.zone"
           }
         }
         scm {

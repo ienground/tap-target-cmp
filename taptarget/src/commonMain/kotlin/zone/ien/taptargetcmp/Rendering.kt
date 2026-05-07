@@ -473,43 +473,6 @@ private fun AnimateOut(
  * @param key The key used to know when to remove the overlay.
  * @param content The content of the overlay.
  */
-//@Composable
-//internal fun Overlay(
-//    key: Any?,
-//    content: @Composable () -> Unit
-//) {
-//    val context = LocalContext.current
-//    val activity = context.getActivity()
-//    if (activity == null) {
-//        println("${LOG_TAG} / Can't show overlay, activity is null")
-//        return
-//    }
-//
-//    val decor = activity.window.decorView as? ViewGroup
-//    if (decor == null) {
-//        println("${LOG_TAG} / Can't show overlay, decor is null")
-//        return
-//    }
-//
-//    val layoutParams = ViewGroup.LayoutParams(
-//        ViewGroup.LayoutParams.MATCH_PARENT,
-//        ViewGroup.LayoutParams.MATCH_PARENT
-//    )
-//
-//    // We want the overlay to be always rendered above the entire content of the app.
-//    // To do this we need to access the decor view of the activity and add our overlay to it.
-//    // Otherwise the tap target rendering would be limited to the size of the [TapTargetCoordinator].
-//    DisposableEffect(key) {
-//        val composeView = ComposeView(context).apply {
-//            setContent { content() }
-//        }
-//        decor.addView(composeView, layoutParams)
-//
-//        onDispose {
-//            decor.removeView(composeView)
-//        }
-//    }
-//}
 
 @Composable
 internal fun Overlay(
@@ -529,12 +492,6 @@ internal fun Overlay(
         }
     }
 }
-
-//private fun Context.getActivity(): Activity? = when (this) {
-//    is Activity -> this
-//    is ContextWrapper -> baseContext.getActivity()
-//    else -> null
-//}
 
 @Composable
 private fun TextDefinition.rememberMeasure(
