@@ -7,5 +7,3 @@ plugins {
   alias(libs.plugins.android.lint) apply false
   alias(libs.plugins.compose.compiler) apply false
 }
-
-//apply(from = "./scripts/publish-root.gradle")

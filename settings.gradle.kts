@@ -19,5 +19,5 @@ rootProject.name = "tap-target-cmp"
 include(":example")
 include(":example:composeApp")
 include(":example:androidApp")
-//include(":tap-target-compose")
+include(":example:iosApp")
 include(":taptarget")
