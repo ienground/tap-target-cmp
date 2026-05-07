@@ -3,9 +3,9 @@ tap-target-compose is a Compose Multiplatform implementation of the [Material De
 
 This library was inspired by its View counterpart, [TapTargetView](https://github.com/KeepSafe/TapTargetView).L:
 
-|     |     |
-| --- | --- |
-| ![](/.github/tap-target-image.gif) | [![](/.github/green-stash.gif)](https://github.com/Pool-Of-Tears/GreenStash) |
+|                                   |                               |
+|-----------------------------------|-------------------------------|
+| ![](/.github/android_example.gif) | ![](/.github/ios_example.gif) |
 
 # Sample app
 This library comes with a sample app that shows examples of how to use it.
