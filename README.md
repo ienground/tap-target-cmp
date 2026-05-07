@@ -1,7 +1,7 @@
 # tap-target-cmp
 tap-target-compose is a Compose Multiplatform implementation of the [Material Design tap targets](https://m1.material.io/growth-communications/feature-discovery.html#feature-discovery-design), used for feature discovery.
 
-This library was inspired by its View counterpart, [TapTargetView](https://github.com/KeepSafe/TapTargetView).L:
+This library was inspired by its View counterpart, [TapTargetView](https://github.com/KeepSafe/TapTargetView).
 
 |                                   |                               |
 |-----------------------------------|-------------------------------|
