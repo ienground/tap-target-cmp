@@ -9,7 +9,7 @@ Save time and increase customer satisfaction.
 # tap-target-compose
 tap-target-compose is a Jetpack Compose implementation of the [Material Design tap targets](https://m1.material.io/growth-communications/feature-discovery.html#feature-discovery-design), used for feature discovery.
 
-This library was inspired by its View counterpart, [TapTargetView](https://github.com/KeepSafe/TapTargetView).
+This library was inspired by its View counterpart, [TapTargetView](https://github.com/KeepSafe/TapTargetView).L:
 
 |     |     |
 | --- | --- |

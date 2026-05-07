@@ -2,9 +2,9 @@ import com.psoffritti.taptargetcompose.Configuration
 import org.gradle.kotlin.dsl.android
 
 plugins {
-  alias(libs.plugins.android.application)
+  alias(libs.plugins.android.application.outdated)
   alias(libs.plugins.jetbrains.kotlin.android)
-  alias(libs.plugins.compose.compiler)
+  alias(libs.plugins.compose.compiler.outdated)
 }
 
 android {
