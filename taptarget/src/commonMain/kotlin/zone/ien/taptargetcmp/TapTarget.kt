@@ -1,7 +1,7 @@
 package zone.ien.taptargetcmp
 
-import androidx.annotation.FloatRange
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -21,21 +21,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 
-/**
- * A composable that can shows tap targets in succession.
- * @param showTapTargets Whether to show the tap targets or not.
- * @param modifier The modifier to apply to this layout.
- * @param onComplete Called when all tap targets have been shown.
- * @param state The state of [TapTargetCoordinator],
- * can be used to know which tap target is being shown.
- * @param content The main content. Each composable in the [content] can be marked as a tap target.
- */
 @Composable
 fun TapTargetCoordinator(
   showTapTargets: Boolean,
   modifier: Modifier = Modifier,
   onComplete: () -> Unit = { },
-  // TODO(issue#1) use rememberSavable
   state: TapTargetCoordinatorState = remember { TapTargetCoordinatorState() },
   contentAlignment: Alignment = Alignment.Center,
   content: @Composable TapTargetScope.() -> Unit,
@@ -46,20 +36,17 @@ fun TapTargetCoordinator(
     contentAlignment = contentAlignment,
     modifier = modifier
   ) {
-    // Always render the content.
     scope.content()
+
     if (showTapTargets) {
       val currentTapTarget = state.currentTarget
       if (currentTapTarget != null) {
-        // Render the TapTarget in an overlay.
-        // The overlay is removed when the composable leaves the composition.
-        Overlay(key = Unit) {
+        Box(modifier = Modifier.fillMaxSize()) {
           TapTarget(
             tapTarget = currentTapTarget,
             onComplete = {
               state.currentTargetIndex++
               if (state.currentTargetIndex >= state.tapTargets.size) {
-                // There are no TapTargets left to render.
                 onComplete()
               }
             }
@@ -70,22 +57,13 @@ fun TapTargetCoordinator(
   }
 }
 
-/** The scope from which a tap target can be created, through [Modifier.tapTarget]. */
 class TapTargetScope internal constructor(private val state: TapTargetCoordinatorState) {
 
-  /**
-   * Modifier used to mark a [Composable] as a tap target.
-   * @param precedence The precedence of the target. Targets are shown in order of precedence.
-   * @param tapTargetStyle The style of the tap target.
-   * @param onTargetClick Called when the target is clicked.
-   * @param onTargetCancel Called when the target is cancelled, by clicking outside the target.
-   */
   fun Modifier.tapTarget(
     title: TextDefinition,
     description: TextDefinition,
     precedence: Int,
     tapTargetStyle: TapTargetStyle = TapTargetStyle.Default,
-    // TODO(issue#2) can we avoid intercepting the click instead of defining a callback?
     onTargetClick: () -> Unit = { },
     onTargetCancel: () -> Unit = { },
   ): Modifier {
@@ -102,10 +80,6 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
     }
   }
 
-  /**
-   * The same as [Modifier.tapTarget], but takes a [TapTargetDefinition].
-   * @see Modifier.tapTarget
-   */
   fun Modifier.tapTarget(tapTargetDefinition: TapTargetDefinition): Modifier {
     return tapTarget(
       tapTargetDefinition.title,
@@ -118,7 +92,6 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
   }
 }
 
-/** The content of a tap target. */
 data class TapTargetDefinition(
   val title: TextDefinition,
   val description: TextDefinition,
@@ -128,7 +101,6 @@ data class TapTargetDefinition(
   val onTargetCancel: () -> Unit = { },
 )
 
-/** Keeps track of which tap target is currently being shown. */
 class TapTargetCoordinatorState internal constructor() {
   internal val tapTargets = mutableStateMapOf<Int, TapTarget>()
   internal var currentTargetIndex by mutableIntStateOf(0)
@@ -136,16 +108,6 @@ class TapTargetCoordinatorState internal constructor() {
   val currentTarget get() = tapTargets[currentTargetIndex]
 }
 
-/**
- * Defines a tap target.
- * @param precedence The precedence of the target. Tap Targets are shown in order of precedence.
- * @param title The title of the tap target.
- * @param description The description of the tap target.
- * @param coordinates The [LayoutCoordinates] of the target.
- * @param style The style of the tap target.
- * @param onTargetClick Called when the target is clicked.
- * @param onTargetCancel Called when the target is cancelled, by clicking outside the target.
- */
 class TapTarget internal constructor(
   val precedence: Int,
   val title: TextDefinition,
@@ -156,7 +118,6 @@ class TapTarget internal constructor(
   val onTargetCancel: () -> Unit,
 )
 
-/** Defines a text block shown in the tap target. */
 data class TextDefinition(
   val text: String,
   internal val textStyle: TextStyle = TextStyle.Default,
@@ -185,15 +146,8 @@ data class TextDefinition(
   )
 }
 
-/**
- * Defines the look and feel of a tap target.
- * @param backgroundColor The background color of the main circle.
- * @param backgroundAlpha The alpha of the main circle.
- * @param tapTargetHighlightColor The color of the highlight circle.
- */
 data class TapTargetStyle(
   val backgroundColor: Color = Color.Blue,
-  @FloatRange(from = 0.0, to = 1.0)
   val backgroundAlpha: Float = 1f,
   val tapTargetHighlightColor: Color = Color.White,
 ) {
