@@ -18,16 +18,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -43,12 +49,21 @@ fun TapTargetCoordinator(
 ) {
     val tapTargetScope = remember(state) { TapTargetScope(state) }
 
+    val density = LocalDensity.current
+
     LaunchedEffect(state.currentTargetIndex) {
         val target = state.currentTarget
         if (target != null) {
             onTargetChanged(target.precedence)
             if (target.bringIntoViewEnabled) {
-                target.bringIntoViewRequester.bringIntoView()
+                val offsetPx = with(density) { target.bringIntoViewVerticalOffset.toPx() }
+                val size = target.coordinates.size
+                target.bringIntoViewRequester.bringIntoView(
+                    Rect(
+                        offset = Offset(0f, -offsetPx),
+                        size = Size(size.width.toFloat(), size.height.toFloat())
+                    )
+                )
             }
         }
     }
@@ -91,6 +106,7 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
         onTargetClick: () -> Unit = { },
         onTargetCancel: () -> Unit = { },
         bringIntoViewEnabled: Boolean = true,
+        bringIntoViewVerticalOffset: Dp = 0.dp,
         bringIntoViewRequester: BringIntoViewRequester? = null,
     ): Modifier = composed {
         val requester = bringIntoViewRequester ?: remember { BringIntoViewRequester() }
@@ -104,6 +120,7 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
                 onTargetClick = onTargetClick,
                 onTargetCancel = onTargetCancel,
                 bringIntoViewEnabled = bringIntoViewEnabled,
+                bringIntoViewVerticalOffset = bringIntoViewVerticalOffset,
                 bringIntoViewRequester = requester,
             )
         }
@@ -119,6 +136,7 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
             tapTargetDefinition.onTargetClick,
             tapTargetDefinition.onTargetCancel,
             tapTargetDefinition.bringIntoViewEnabled,
+            tapTargetDefinition.bringIntoViewVerticalOffset,
         )
     }
 }
@@ -142,6 +160,7 @@ data class TapTargetDefinition(
     val onTargetClick: () -> Unit = { },
     val onTargetCancel: () -> Unit = { },
     val bringIntoViewEnabled: Boolean = true,
+    val bringIntoViewVerticalOffset: Dp = 0.dp,
 )
 
 class TapTargetCoordinatorState internal constructor() {
@@ -160,6 +179,7 @@ class TapTarget internal constructor(
     val onTargetClick: () -> Unit,
     val onTargetCancel: () -> Unit,
     val bringIntoViewEnabled: Boolean = true,
+    val bringIntoViewVerticalOffset: Dp = 0.dp,
     @Suppress("EXPERIMENTAL_API_USAGE")
     val bringIntoViewRequester: BringIntoViewRequester = BringIntoViewRequester(),
 )
