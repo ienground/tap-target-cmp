@@ -42,16 +42,13 @@ fun TapTargetCoordinator(
     content: @Composable TapTargetScope.() -> Unit,
 ) {
     val tapTargetScope = remember(state) { TapTargetScope(state) }
-    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(state.currentTargetIndex) {
         val target = state.currentTarget
         if (target != null) {
             onTargetChanged(target.precedence)
             if (target.bringIntoViewEnabled) {
-                coroutineScope.launch {
-                    target.bringIntoViewRequester.bringIntoView()
-                }
+                target.bringIntoViewRequester.bringIntoView()
             }
         }
     }
