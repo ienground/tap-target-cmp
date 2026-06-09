@@ -101,11 +101,13 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
 
 val LocalTapTargetScope = staticCompositionLocalOf<TapTargetScope?> { null }
 
+@Composable
 fun Modifier.ifTapTarget(definition: TapTargetDefinition?): Modifier {
-    return composed {
-        val scope = LocalTapTargetScope.current
-        if (scope == null || definition == null) return@composed this
-        with(scope) { this@composed.tapTarget(definition) }
+    val scope = LocalTapTargetScope.current
+    return if (scope != null && definition != null) {
+        with(scope) { this@ifTapTarget.tapTarget(definition) }
+    } else {
+        this
     }
 }
 
