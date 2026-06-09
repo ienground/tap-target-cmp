@@ -1,13 +1,18 @@
 package zone.ien.taptargetcmp.example
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
@@ -23,7 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import zone.ien.taptargetcmp.TapTargetCoordinator
@@ -36,6 +43,7 @@ import zone.ien.taptargetcmp.example.icon.MaterialIcons
 import zone.ien.taptargetcmp.example.ui.theme.AppTheme
 
 @Composable
+@Preview
 fun App() {
     AppTheme {
         TapTargetCoordinator(
@@ -97,7 +105,94 @@ private fun TapTargetScope.Content() {
         Column(modifier = Modifier.padding(innerPadding)) {
             TabbedControls(onTabSelected = {}) { tab ->
                 when (tab) {
-                    Tab.TAB1 -> Text("Tab 1 content")
+                    Tab.TAB1 -> {
+                        Column(
+                            modifier = Modifier
+                                .verticalScroll(rememberScrollState())
+                                .background(Color.Black)
+                                .fillMaxSize()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .background(Color.Red)
+                                    .tapTarget(
+                                        getStandardTapTargetDefinition(
+                                            precedence = 210,
+                                            title = "Button tap target",
+                                            description = "This is a button, tap it!",
+                                        )
+                                    )
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .background(Color.Magenta)
+                                    .tapTarget(
+                                        getStandardTapTargetDefinition(
+                                            precedence = 211,
+                                            title = "Button tap target",
+                                            description = "This is a button, tap it!",
+                                        )
+                                    )
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .background(Color.Cyan)
+                                    .tapTarget(
+                                        getStandardTapTargetDefinition(
+                                            precedence = 212,
+                                            title = "Button tap target",
+                                            description = "This is a button, tap it!",
+                                        )
+                                    )
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .background(Color.Blue)
+                                    .tapTarget(
+                                        getStandardTapTargetDefinition(
+                                            precedence = 213,
+                                            title = "Button tap target",
+                                            description = "This is a button, tap it!",
+                                            bringIntoViewEnabled = false
+                                        )
+                                    )
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .background(Color.Green)
+                                    .tapTarget(
+                                        getStandardTapTargetDefinition(
+                                            precedence = 214,
+                                            title = "Button tap target",
+                                            description = "This is a button, tap it!",
+                                        )
+                                    )
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .background(Color.Yellow)
+                                    .tapTarget(
+                                        getStandardTapTargetDefinition(
+                                            precedence = 215,
+                                            title = "Button tap target",
+                                            description = "This is a button, tap it!",
+                                        )
+                                    )
+                            )
+                        }
+                    }
                     Tab.TAB2 -> Text("Tab 2 content", modifier = Modifier.tapTarget(tab2TapTarget))
                 }
             }
@@ -137,7 +232,7 @@ private fun TabbedControls(
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        HorizontalPager(state = pagerState, modifier = Modifier.height(128.dp)) { pageIndex ->
+        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { pageIndex ->
             contentProvider(Tab.entries[pageIndex])
         }
 
@@ -153,6 +248,7 @@ private fun getStandardTapTargetDefinition(
     precedence: Int,
     title: String,
     description: String,
+    bringIntoViewEnabled: Boolean = true,
     onTargetCLick: () -> Unit = {},
     onTargetCancel: () -> Unit = {},
 ): TapTargetDefinition {
@@ -176,5 +272,6 @@ private fun getStandardTapTargetDefinition(
         ),
         onTargetClick = onTargetCLick,
         onTargetCancel = onTargetCancel,
+        bringIntoViewEnabled = bringIntoViewEnabled
     )
 }
