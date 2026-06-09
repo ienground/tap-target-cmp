@@ -1,7 +1,10 @@
 package zone.ien.taptargetcmp
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -10,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,7 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TapTargetCoordinator(
     showTapTargets: Boolean,
@@ -35,18 +41,24 @@ fun TapTargetCoordinator(
     contentAlignment: Alignment = Alignment.Center,
     content: @Composable TapTargetScope.() -> Unit,
 ) {
-    val scope = remember(state) { TapTargetScope(state) }
+    val tapTargetScope = remember(state) { TapTargetScope(state) }
 
     LaunchedEffect(state.currentTargetIndex) {
-        state.currentTarget?.let { onTargetChanged(it.precedence) }
+        val target = state.currentTarget
+        if (target != null) {
+            onTargetChanged(target.precedence)
+            if (target.bringIntoViewEnabled) {
+                target.bringIntoViewRequester.bringIntoView()
+            }
+        }
     }
 
-    CompositionLocalProvider(LocalTapTargetScope provides scope) {
+    CompositionLocalProvider(LocalTapTargetScope provides tapTargetScope) {
         Box(
             contentAlignment = contentAlignment,
             modifier = modifier
         ) {
-            scope.content()
+            tapTargetScope.content()
 
             if (showTapTargets) {
                 val currentTapTarget = state.currentTarget
@@ -70,6 +82,7 @@ fun TapTargetCoordinator(
 
 class TapTargetScope internal constructor(private val state: TapTargetCoordinatorState) {
 
+    @OptIn(ExperimentalFoundationApi::class)
     fun Modifier.tapTarget(
         title: TextDefinition,
         description: TextDefinition,
@@ -77,8 +90,11 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
         tapTargetStyle: TapTargetStyle = TapTargetStyle.Default,
         onTargetClick: () -> Unit = { },
         onTargetCancel: () -> Unit = { },
-    ): Modifier {
-        return onGloballyPositioned { layoutCoordinates ->
+        bringIntoViewEnabled: Boolean = true,
+        bringIntoViewRequester: BringIntoViewRequester? = null,
+    ): Modifier = composed {
+        val requester = bringIntoViewRequester ?: remember { BringIntoViewRequester() }
+        onGloballyPositioned { layoutCoordinates ->
             state.tapTargets[precedence] = TapTarget(
                 precedence = precedence,
                 coordinates = layoutCoordinates,
@@ -87,8 +103,11 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
                 style = tapTargetStyle,
                 onTargetClick = onTargetClick,
                 onTargetCancel = onTargetCancel,
+                bringIntoViewEnabled = bringIntoViewEnabled,
+                bringIntoViewRequester = requester,
             )
         }
+            .bringIntoViewRequester(requester)
     }
 
     fun Modifier.tapTarget(tapTargetDefinition: TapTargetDefinition): Modifier {
@@ -98,7 +117,8 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
             tapTargetDefinition.precedence,
             tapTargetDefinition.tapTargetStyle,
             tapTargetDefinition.onTargetClick,
-            tapTargetDefinition.onTargetCancel
+            tapTargetDefinition.onTargetCancel,
+            tapTargetDefinition.bringIntoViewEnabled,
         )
     }
 }
@@ -121,6 +141,7 @@ data class TapTargetDefinition(
     val tapTargetStyle: TapTargetStyle = TapTargetStyle.Default,
     val onTargetClick: () -> Unit = { },
     val onTargetCancel: () -> Unit = { },
+    val bringIntoViewEnabled: Boolean = true,
 )
 
 class TapTargetCoordinatorState internal constructor() {
@@ -138,6 +159,9 @@ class TapTarget internal constructor(
     val style: TapTargetStyle = TapTargetStyle.Default,
     val onTargetClick: () -> Unit,
     val onTargetCancel: () -> Unit,
+    val bringIntoViewEnabled: Boolean = true,
+    @Suppress("EXPERIMENTAL_API_USAGE")
+    val bringIntoViewRequester: BringIntoViewRequester = BringIntoViewRequester(),
 )
 
 data class TextDefinition(
