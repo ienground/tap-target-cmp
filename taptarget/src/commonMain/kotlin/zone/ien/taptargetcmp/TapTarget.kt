@@ -100,7 +100,7 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
     }
 }
 
-val LocalTapTargetScope = compositionLocalOf<TapTargetScope?> { null }
+val LocalTapTargetScope = staticCompositionLocalOf<TapTargetScope?> { null }
 
 fun Modifier.ifTapTarget(definition: TapTargetDefinition?): Modifier {
     return composed {
