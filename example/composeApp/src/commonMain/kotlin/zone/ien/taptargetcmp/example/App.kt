@@ -53,7 +53,8 @@ fun App() {
             },
             onComplete = {
                 println("this tap target end")
-            }
+            },
+            bringIntoViewVerticalOffset = (-240).dp
         ) {
             Surface(modifier = Modifier.fillMaxSize()) {
                 Content()
