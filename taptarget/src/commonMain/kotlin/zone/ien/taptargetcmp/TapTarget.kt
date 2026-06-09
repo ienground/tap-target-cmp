@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -36,6 +37,10 @@ fun TapTargetCoordinator(
 ) {
     val scope = remember(state) { TapTargetScope(state) }
 
+    LaunchedEffect(state.currentTargetIndex) {
+        onIndexChanged(state.currentTargetIndex)
+    }
+
     CompositionLocalProvider(LocalTapTargetScope provides scope) {
         Box(
             contentAlignment = contentAlignment,
@@ -51,7 +56,6 @@ fun TapTargetCoordinator(
                             tapTarget = currentTapTarget,
                             onComplete = {
                                 state.currentTargetIndex++
-                                onIndexChanged(state.currentTargetIndex)
                                 if (state.currentTargetIndex >= state.tapTargets.size) {
                                     onComplete()
                                 }
