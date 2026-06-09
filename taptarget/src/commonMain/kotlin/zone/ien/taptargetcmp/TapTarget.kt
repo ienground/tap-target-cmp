@@ -46,7 +46,7 @@ fun TapTargetCoordinator(
     bringIntoViewVerticalOffset: Dp = 0.dp,
     content: @Composable TapTargetScope.() -> Unit,
 ) {
-    val tapTargetScope = remember(state) { TapTargetScope(state, bringIntoViewVerticalOffset) }
+    val tapTargetScope = remember(state, bringIntoViewVerticalOffset) { TapTargetScope(state, bringIntoViewVerticalOffset) }
 
     val density = LocalDensity.current
 
