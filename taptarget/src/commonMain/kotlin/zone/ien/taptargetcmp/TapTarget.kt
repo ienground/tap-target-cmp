@@ -8,13 +8,12 @@ import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -34,7 +33,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -45,9 +43,10 @@ fun TapTargetCoordinator(
     onTargetChanged: (Int) -> Unit = {},
     state: TapTargetCoordinatorState = remember { TapTargetCoordinatorState() },
     contentAlignment: Alignment = Alignment.Center,
+    bringIntoViewVerticalOffset: Dp = 0.dp,
     content: @Composable TapTargetScope.() -> Unit,
 ) {
-    val tapTargetScope = remember(state) { TapTargetScope(state) }
+    val tapTargetScope = remember(state) { TapTargetScope(state, bringIntoViewVerticalOffset) }
 
     val density = LocalDensity.current
 
@@ -95,7 +94,10 @@ fun TapTargetCoordinator(
     }
 }
 
-class TapTargetScope internal constructor(private val state: TapTargetCoordinatorState) {
+class TapTargetScope internal constructor(
+    private val state: TapTargetCoordinatorState,
+    internal val defaultBringIntoViewVerticalOffset: Dp = 0.dp,
+) {
 
     @OptIn(ExperimentalFoundationApi::class)
     fun Modifier.tapTarget(
@@ -106,10 +108,11 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
         onTargetClick: () -> Unit = { },
         onTargetCancel: () -> Unit = { },
         bringIntoViewEnabled: Boolean = true,
-        bringIntoViewVerticalOffset: Dp = 0.dp,
+        bringIntoViewVerticalOffset: Dp? = null,
         bringIntoViewRequester: BringIntoViewRequester? = null,
     ): Modifier = composed {
         val requester = bringIntoViewRequester ?: remember { BringIntoViewRequester() }
+        val offset = bringIntoViewVerticalOffset ?: defaultBringIntoViewVerticalOffset
         onGloballyPositioned { layoutCoordinates ->
             state.tapTargets[precedence] = TapTarget(
                 precedence = precedence,
@@ -120,7 +123,7 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
                 onTargetClick = onTargetClick,
                 onTargetCancel = onTargetCancel,
                 bringIntoViewEnabled = bringIntoViewEnabled,
-                bringIntoViewVerticalOffset = bringIntoViewVerticalOffset,
+                bringIntoViewVerticalOffset = offset,
                 bringIntoViewRequester = requester,
             )
         }
@@ -160,7 +163,7 @@ data class TapTargetDefinition(
     val onTargetClick: () -> Unit = { },
     val onTargetCancel: () -> Unit = { },
     val bringIntoViewEnabled: Boolean = true,
-    val bringIntoViewVerticalOffset: Dp = 0.dp,
+    val bringIntoViewVerticalOffset: Dp? = null,
 )
 
 class TapTargetCoordinatorState internal constructor() {
