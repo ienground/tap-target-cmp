@@ -102,6 +102,43 @@ TapTargetCoordinator(showTapTargets = true, onComplete = {}) {
 
 The library supports chaining of multiple tap targets, but you can also show only one if that's what you need.
 
+## Bring Into View
+
+When using tap targets inside a scrollable container, each target can automatically scroll into view when it becomes active. This behavior is controlled by `bringIntoViewEnabled` and `bringIntoViewVerticalOffset` parameters.
+
+Set a default vertical offset at the coordinator level, and optionally override it per target:
+
+```kotlin
+TapTargetCoordinator(
+    showTapTargets = true,
+    bringIntoViewVerticalOffset = 100.dp,  // default offset for all targets
+    onComplete = { }
+) {
+    Button(
+        onClick = { },
+        modifier = Modifier.tapTarget(
+            precedence = 0,
+            title = TextDefinition(text = "Title"),
+            description = TextDefinition(text = "Description"),
+            bringIntoViewVerticalOffset = 160.dp,  // override for this target
+        ),
+    ) {
+        Text(text = "Click here")
+    }
+}
+```
+
+You can also disable bring into view for specific targets:
+
+```kotlin
+Modifier.tapTarget(
+    precedence = 1,
+    title = TextDefinition(text = "Title"),
+    description = TextDefinition(text = "Description"),
+    bringIntoViewEnabled = false,
+)
+```
+
 ---
 
 For any question feel free to [open an issue on the GitHub repository](https://github.com/ienground/tap-target-cmp/issues).

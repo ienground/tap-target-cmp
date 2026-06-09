@@ -34,6 +34,21 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 
+/**
+ * Top-level composable that orchestrates tap target discovery overlays.
+ *
+ * Wrap your content inside this composable and mark elements with [TapTargetScope.tapTarget]
+ * to show tap targets over them.
+ *
+ * @param showTapTargets Whether to show the tap targets overlay.
+ * @param modifier Modifier applied to the root container.
+ * @param onComplete Called when all tap targets have been dismissed.
+ * @param onTargetChanged Called with the precedence of the newly active target.
+ * @param state Mutable state holder for the coordinator. Useful for resetting or inspecting state.
+ * @param contentAlignment Alignment of the content within the coordinator.
+ * @param bringIntoViewVerticalOffset Default vertical offset applied when scrolling a target into view. Can be overridden per target.
+ * @param content The composable content that contains tap-target-marked elements.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TapTargetCoordinator(
@@ -54,7 +69,7 @@ fun TapTargetCoordinator(
         val target = state.currentTarget
         if (target != null) {
             onTargetChanged(target.precedence)
-            if (target.bringIntoViewEnabled) {
+            if (target.bringIntoViewEnabled && target.coordinates.isAttached) {
                 val offsetPx = with(density) { target.bringIntoViewVerticalOffset.toPx() }
                 val size = target.coordinates.size
                 target.bringIntoViewRequester.bringIntoView(
@@ -94,11 +109,31 @@ fun TapTargetCoordinator(
     }
 }
 
+/**
+ * Scope receiver for [TapTargetCoordinator] content, providing the [Modifier.tapTarget] extensions
+ * to mark composables as tap target anchors.
+ */
 class TapTargetScope internal constructor(
     private val state: TapTargetCoordinatorState,
     internal val defaultBringIntoViewVerticalOffset: Dp = 0.dp,
 ) {
 
+    /**
+     * Marks this composable as a tap target anchor.
+     *
+     * The tap target overlay will point to this element when its [precedence] is active.
+     *
+     * @param title Title text shown in the overlay.
+     * @param description Description text shown in the overlay.
+     * @param precedence Deterministic ordering key. Lower values are shown first.
+     * @param tapTargetStyle Visual style for the tap target (colors, alpha).
+     * @param onTargetClick Called when the user taps the highlighted target area.
+     * @param onTargetCancel Called when the user taps outside the target.
+     * @param bringIntoViewEnabled Whether to automatically scroll this element into view when it becomes active.
+     * @param bringIntoViewVerticalOffset Vertical offset (in Dp) above the element when scrolling into view.
+     *   Falls back to [TapTargetScope.defaultBringIntoViewVerticalOffset] when `null`.
+     * @param bringIntoViewRequester Optional custom [BringIntoViewRequester]. If `null`, one is created automatically.
+     */
     @OptIn(ExperimentalFoundationApi::class)
     fun Modifier.tapTarget(
         title: TextDefinition,
@@ -130,6 +165,11 @@ class TapTargetScope internal constructor(
             .bringIntoViewRequester(requester)
     }
 
+    /**
+     * Marks this composable as a tap target anchor using a pre-configured [TapTargetDefinition].
+     *
+     * @param tapTargetDefinition The definition holding all tap target configuration.
+     */
     fun Modifier.tapTarget(tapTargetDefinition: TapTargetDefinition): Modifier {
         return tapTarget(
             tapTargetDefinition.title,
@@ -144,8 +184,17 @@ class TapTargetScope internal constructor(
     }
 }
 
+/**
+ * CompositionLocal holding the current [TapTargetScope], used by [Modifier.ifTapTarget].
+ */
 val LocalTapTargetScope = staticCompositionLocalOf<TapTargetScope?> { null }
 
+/**
+ * Conditionally applies [TapTargetScope.tapTarget] only when inside a [TapTargetCoordinator]
+ * and [definition] is non-null. Otherwise this modifier is a no-op.
+ *
+ * @param definition The tap target definition, or `null` to skip.
+ */
 fun Modifier.ifTapTarget(definition: TapTargetDefinition?): Modifier = composed {
     val scope = LocalTapTargetScope.current
     if (scope != null && definition != null) {
@@ -155,6 +204,18 @@ fun Modifier.ifTapTarget(definition: TapTargetDefinition?): Modifier = composed 
     }
 }
 
+/**
+ * Pre-configured definition of a tap target, reusable across multiple [TapTargetScope.tapTarget] calls.
+ *
+ * @param title Title text shown in the overlay.
+ * @param description Description text shown in the overlay.
+ * @param precedence Deterministic ordering key. Lower values are shown first.
+ * @param tapTargetStyle Visual style for the tap target.
+ * @param onTargetClick Called when the user taps the highlighted area.
+ * @param onTargetCancel Called when the user taps outside the target.
+ * @param bringIntoViewEnabled Whether to auto-scroll this element into view when active.
+ * @param bringIntoViewVerticalOffset Vertical offset when scrolling into view. `null` uses the coordinator default.
+ */
 data class TapTargetDefinition(
     val title: TextDefinition,
     val description: TextDefinition,
@@ -166,6 +227,13 @@ data class TapTargetDefinition(
     val bringIntoViewVerticalOffset: Dp? = null,
 )
 
+/**
+ * Mutable state holder for [TapTargetCoordinator].
+ *
+ * Useful for inspecting the currently active target or resetting state programmatically.
+ *
+ * @property currentTarget The currently active [TapTarget], or `null` if none is active.
+ */
 class TapTargetCoordinatorState internal constructor() {
     internal val tapTargets = mutableStateMapOf<Int, TapTarget>()
     internal var currentTargetIndex by mutableIntStateOf(0)
@@ -187,6 +255,14 @@ class TapTarget internal constructor(
     val bringIntoViewRequester: BringIntoViewRequester = BringIntoViewRequester(),
 )
 
+/**
+ * Text content definition for tap target title and description.
+ *
+ * Provides a convenient way to style text without creating a full [TextStyle] manually.
+ *
+ * @param text The text content.
+ * @property style The resolved [TextStyle] merging all provided properties into [TextStyle.Default].
+ */
 data class TextDefinition(
     val text: String,
     internal val textStyle: TextStyle = TextStyle.Default,
@@ -215,6 +291,13 @@ data class TextDefinition(
     )
 }
 
+/**
+ * Visual style configuration for a tap target overlay.
+ *
+ * @param backgroundColor Background color of the outer circle and text block area.
+ * @param backgroundAlpha Alpha value for the background color (0.0 – 1.0).
+ * @param tapTargetHighlightColor Color of the highlight circle and the XOR-revealed area over the target.
+ */
 data class TapTargetStyle(
     val backgroundColor: Color = Color.Blue,
     val backgroundAlpha: Float = 1f,
