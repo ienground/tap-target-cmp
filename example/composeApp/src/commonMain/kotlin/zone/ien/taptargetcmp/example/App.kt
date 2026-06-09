@@ -38,7 +38,13 @@ import zone.ien.taptargetcmp.example.ui.theme.AppTheme
 @Composable
 fun App() {
     AppTheme {
-        TapTargetCoordinator(showTapTargets = true, onComplete = {}) {
+        TapTargetCoordinator(
+            showTapTargets = true,
+            onIndexChanged = { index ->
+                println("tap target index $index")
+            },
+            onComplete = {}
+        ) {
             Surface(modifier = Modifier.fillMaxSize()) {
                 Content()
             }
@@ -54,6 +60,7 @@ private fun TapTargetScope.Content() {
         title = "Toolbar tap target",
         description = "This is a toolbar, tap it!",
     )
+
 
     val tab2TapTarget = getStandardTapTargetDefinition(
         precedence = 2,
