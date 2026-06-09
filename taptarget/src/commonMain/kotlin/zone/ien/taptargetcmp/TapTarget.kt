@@ -30,7 +30,7 @@ fun TapTargetCoordinator(
     showTapTargets: Boolean,
     modifier: Modifier = Modifier,
     onComplete: () -> Unit = { },
-    onIndexChanged: (Int) -> Unit = {},
+    onTargetChanged: (Int) -> Unit = {},
     state: TapTargetCoordinatorState = remember { TapTargetCoordinatorState() },
     contentAlignment: Alignment = Alignment.Center,
     content: @Composable TapTargetScope.() -> Unit,
@@ -38,7 +38,7 @@ fun TapTargetCoordinator(
     val scope = remember(state) { TapTargetScope(state) }
 
     LaunchedEffect(state.currentTargetIndex) {
-        onIndexChanged(state.currentTargetIndex)
+        state.currentTarget?.let { onTargetChanged(it.precedence) }
     }
 
     CompositionLocalProvider(LocalTapTargetScope provides scope) {
@@ -105,11 +105,10 @@ class TapTargetScope internal constructor(private val state: TapTargetCoordinato
 
 val LocalTapTargetScope = staticCompositionLocalOf<TapTargetScope?> { null }
 
-@Composable
-fun Modifier.ifTapTarget(definition: TapTargetDefinition?): Modifier {
+fun Modifier.ifTapTarget(definition: TapTargetDefinition?): Modifier = composed {
     val scope = LocalTapTargetScope.current
-    return if (scope != null && definition != null) {
-        with(scope) { this@ifTapTarget.tapTarget(definition) }
+    if (scope != null && definition != null) {
+        with(scope) { this@composed.tapTarget(definition) }
     } else {
         this
     }
@@ -127,8 +126,8 @@ data class TapTargetDefinition(
 class TapTargetCoordinatorState internal constructor() {
     internal val tapTargets = mutableStateMapOf<Int, TapTarget>()
     internal var currentTargetIndex by mutableIntStateOf(0)
-
-    val currentTarget get() = tapTargets[currentTargetIndex]
+    val currentTarget: TapTarget?
+        get() = tapTargets.keys.sorted().getOrNull(currentTargetIndex)?.let { tapTargets[it] }
 }
 
 class TapTarget internal constructor(
