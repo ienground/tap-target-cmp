@@ -102,6 +102,29 @@ TapTargetCoordinator(showTapTargets = true, onComplete = {}) {
 
 The library supports chaining of multiple tap targets, but you can also show only one if that's what you need.
 
+## Skip button
+
+`TapTargetCoordinator`에 `skipButton`을 전달하면 현재 안내를 건너뛸 수 있는 UI를 원하는 형태로 구성할 수 있습니다. 슬롯에 전달되는 콜백을 호출하면 남은 모든 타깃을 종료하고 `onComplete`가 호출됩니다. `BoxScope` 수신자를 사용하므로 `Modifier.align`으로 위치를 지정할 수 있습니다.
+
+```kotlin
+TapTargetCoordinator(
+    showTapTargets = true,
+    skipButton = { onSkip ->
+        TextButton(
+            onClick = onSkip,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+        ) {
+            Text("Skip")
+        }
+    },
+    onComplete = { },
+) {
+    // tap-target content
+}
+```
+
 ## Bring Into View
 
 When using tap targets inside a scrollable container, each target can automatically scroll into view when it becomes active. This behavior is controlled by `bringIntoViewEnabled` and `bringIntoViewVerticalOffset` parameters.
