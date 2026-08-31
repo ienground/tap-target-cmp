@@ -18,7 +18,7 @@ activity-compose = "1.13.0"
 androidx-core = "1.19.0"
 
 # backend
-vanniktechMavenPublish = "0.36.0"
+vanniktechMavenPublish = "0.37.0"
 
 # test
 runner = "1.7.0"

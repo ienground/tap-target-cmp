@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -79,6 +80,12 @@ private val MAX_TEXT_WIDTH = 360f.dp
 /** 제목과 설명 텍스트 사이의 간격. */
 private val TEXT_SPACING = 2.dp
 
+/** 스킵 버튼과 설명 사이의 간격. */
+private val SKIP_BUTTON_TOP_SPACING = 16.dp
+
+/** 스킵 버튼 영역의 최소 높이. */
+private val SKIP_BUTTON_HEIGHT = 48.dp
+
 private fun Dp.toPx(density: Density) = with(density) { toPx() }
 
 /** Composable responsible for drawing the tap target. */
@@ -86,6 +93,8 @@ private fun Dp.toPx(density: Density) = with(density) { toPx() }
 internal fun TapTarget(
     tapTarget: TapTarget,
     animationKey: Any?,
+    skipButton: (@Composable BoxScope.(onSkip: () -> Unit) -> Unit)?,
+    onSkip: () -> Unit,
     onComplete: () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -188,7 +197,12 @@ internal fun TapTarget(
     } else {
         0f
     }
-    val contentBlockHeightPx = textBlockHeightPx + iconContainerHeightPx
+    val skipButtonContainerHeightPx = if (skipButton != null) {
+        SKIP_BUTTON_TOP_SPACING.toPx(density) + SKIP_BUTTON_HEIGHT.toPx(density)
+    } else {
+        0f
+    }
+    val contentBlockHeightPx = textBlockHeightPx + iconContainerHeightPx + skipButtonContainerHeightPx
     val contentTopLeft = getTextBlockOffset(
         Size(textWidthPx, contentBlockHeightPx),
         screenSizePx,
@@ -198,6 +212,10 @@ internal fun TapTarget(
         textVerticalMarginPx
     )
     val textBlockTopLeft = contentTopLeft + Offset(0f, iconContainerHeightPx)
+    val skipButtonTopLeft = textBlockTopLeft + Offset(
+        x = 0f,
+        y = textBlockHeightPx + SKIP_BUTTON_TOP_SPACING.toPx(density),
+    )
     val textBlockRect = Rect(
         textBlockTopLeft.x,
         textBlockTopLeft.y,
@@ -244,6 +262,10 @@ internal fun TapTarget(
         iconContainerSizePx = ICON_CONTAINER_SIZE.toPx(density),
         textBlockTopLeft = textBlockTopLeft,
         textBlockWidth = textWidthPx,
+        skipButton = skipButton,
+        onSkip = onSkip,
+        skipButtonTopLeft = skipButtonTopLeft,
+        skipButtonWidth = with(density) { textWidthPx.toDp() },
         titleMeasure = titleMeasure,
         descriptionMeasure = descriptionMeasure,
         textBlockRect = textBlockRect,
@@ -266,6 +288,10 @@ private fun TapTargetRenderer(
     iconContainerSizePx: Float,
     textBlockTopLeft: Offset,
     textBlockWidth: Float,
+    skipButton: (@Composable BoxScope.(onSkip: () -> Unit) -> Unit)?,
+    onSkip: () -> Unit,
+    skipButtonTopLeft: Offset,
+    skipButtonWidth: Dp,
     titleMeasure: TextLayoutResult,
     descriptionMeasure: TextLayoutResult,
     textBlockRect: Rect
@@ -351,6 +377,25 @@ private fun TapTargetRenderer(
                     )
                 }
                 tapTarget.iconWrapper?.invoke(iconContent) ?: iconContent()
+            }
+        }
+
+        if (skipButton != null) {
+            Box(
+                modifier = Modifier
+                    .offset {
+                        IntOffset(
+                            x = skipButtonTopLeft.x.roundToInt(),
+                            y = skipButtonTopLeft.y.roundToInt(),
+                        )
+                    }
+                    .size(
+                        width = skipButtonWidth,
+                        height = SKIP_BUTTON_HEIGHT,
+                    )
+                    .graphicsLayer { alpha = textAlphaProvider().pow(2) },
+            ) {
+                skipButton.invoke(this, onSkip)
             }
         }
     }

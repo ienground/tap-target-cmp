@@ -3,7 +3,6 @@ package zone.ien.taptargetcmp
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
@@ -12,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.dp
  * @param state Mutable state holder for the coordinator. Useful for resetting or inspecting state.
  * @param contentAlignment Alignment of the content within the coordinator.
  * @param bringIntoViewVerticalOffset Default vertical offset applied when scrolling a target into view. Can be overridden per target.
- * @param skipButton 활성 타깃 위에 표시할 선택적 컴포저블. 전달받은 콜백을 호출하면 남은 타깃을
+ * @param skipButton 활성 타깃 콘텐츠에 표시할 선택적 컴포저블. 전달받은 콜백을 호출하면 남은 타깃을
  *   건너뛰고 [onComplete]를 호출한다. [BoxScope] 수신자를 통해 [Modifier.align]으로 위치를 지정할 수 있다.
  * @param content The composable content that contains tap-target-marked elements.
  */
@@ -71,6 +71,13 @@ fun TapTargetCoordinator(
 ) {
     val tapTargetScope = remember(state, bringIntoViewVerticalOffset) { TapTargetScope(state, bringIntoViewVerticalOffset) }
     val density = LocalDensity.current
+    var completionHandled by remember(state) { mutableStateOf(false) }
+    val complete = {
+        if (!completionHandled) {
+            completionHandled = true
+            onComplete()
+        }
+    }
 
     LaunchedEffect(state.currentTargetIndex) {
         val target = state.currentTarget
@@ -100,26 +107,22 @@ fun TapTargetCoordinator(
             if (showTapTargets) {
                 val currentTapTarget = state.currentTarget
                 if (currentTapTarget != null) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        TapTarget(
-                            tapTarget = currentTapTarget,
-                            animationKey = state.currentTargetIndex,
-                            onComplete = {
-                                state.currentTargetIndex++
-                                if (state.currentTargetIndex >= state.tapTargets.size) {
-                                    onComplete()
-                                }
+                    TapTarget(
+                        tapTarget = currentTapTarget,
+                        animationKey = state.currentTargetIndex,
+                        skipButton = skipButton,
+                        onSkip = {
+                            if (state.skipToEnd()) {
+                                complete()
                             }
-                        )
-                        skipButton?.invoke(
-                            this,
-                            {
-                                if (state.skipToEnd()) {
-                                    onComplete()
-                                }
+                        },
+                        onComplete = {
+                            state.currentTargetIndex++
+                            if (state.currentTargetIndex >= state.tapTargets.size) {
+                                complete()
                             }
-                        )
-                    }
+                        }
+                    )
                 }
             }
         }

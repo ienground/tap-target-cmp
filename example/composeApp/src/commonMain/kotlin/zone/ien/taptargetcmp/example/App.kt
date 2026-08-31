@@ -18,8 +18,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -55,11 +55,9 @@ fun App() {
         TapTargetCoordinator(
             showTapTargets = true,
             skipButton = { onSkip ->
-                IconButton(
+                FilledIconButton(
                     onClick = onSkip,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp),
+                    modifier = Modifier.align(Alignment.Center),
                 ) {
                     Icon(
                         imageVector = MaterialIcons.SkipNext,
