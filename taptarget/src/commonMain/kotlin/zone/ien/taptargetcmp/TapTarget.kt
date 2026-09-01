@@ -96,7 +96,10 @@ fun TapTargetCoordinator(
         }
     }
 
-    CompositionLocalProvider(LocalTapTargetScope provides tapTargetScope) {
+    CompositionLocalProvider(
+        LocalTapTargetScope provides tapTargetScope,
+        LocalTapTargetVisibility provides showTapTargets,
+    ) {
         Box(
             contentAlignment = contentAlignment,
             modifier = modifier
@@ -174,20 +177,33 @@ class TapTargetScope internal constructor(
         return Modifier.composed {
             val requester = bringIntoViewRequester ?: remember { BringIntoViewRequester() }
             val targetLayer = rememberGraphicsLayer()
+            val targetLayerCoordinates = remember { mutableStateOf<LayoutCoordinates?>(null) }
             val offset = bringIntoViewVerticalOffset ?: defaultBringIntoViewVerticalOffset
+            val shouldRecordLayer = shouldRecordTargetLayer(
+                showTapTargets = LocalTapTargetVisibility.current,
+                activePrecedence = state.currentTarget?.precedence,
+                targetPrecedence = precedence,
+            )
+
             Modifier
                 .drawWithContent {
-                    val contentDrawScope = this@drawWithContent
-                    targetLayer.record {
-                        contentDrawScope.drawContent()
+                    if (shouldRecordLayer) {
+                        val contentDrawScope = this@drawWithContent
+                        targetLayer.record {
+                            contentDrawScope.drawContent()
+                        }
                     }
                     drawContent()
+                }
+                .onGloballyPositioned { layoutCoordinates ->
+                    targetLayerCoordinates.value = layoutCoordinates
                 }
                 .then(targetModifier)
                 .onGloballyPositioned { layoutCoordinates ->
                     state.tapTargets[precedence] = TapTarget(
                         precedence = precedence,
                         coordinates = layoutCoordinates,
+                        targetLayerCoordinates = targetLayerCoordinates.value ?: layoutCoordinates,
                         title = title,
                         description = description,
                         style = tapTargetStyle,
@@ -230,6 +246,14 @@ class TapTargetScope internal constructor(
  * CompositionLocal holding the current [TapTargetScope], used by [Modifier.ifTapTarget].
  */
 val LocalTapTargetScope = staticCompositionLocalOf<TapTargetScope?> { null }
+
+private val LocalTapTargetVisibility = staticCompositionLocalOf { false }
+
+internal fun shouldRecordTargetLayer(
+    showTapTargets: Boolean,
+    activePrecedence: Int?,
+    targetPrecedence: Int,
+): Boolean = showTapTargets && activePrecedence == targetPrecedence
 
 /**
  * Conditionally applies [TapTargetScope.tapTarget] only when inside a [TapTargetCoordinator]
@@ -298,6 +322,7 @@ class TapTarget internal constructor(
     val title: TextDefinition,
     val description: TextDefinition,
     val coordinates: LayoutCoordinates,
+    internal val targetLayerCoordinates: LayoutCoordinates,
     val style: TapTargetStyle = TapTargetStyle.Default,
     val onTargetClick: () -> Unit,
     val onTargetCancel: () -> Unit,

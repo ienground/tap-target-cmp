@@ -24,10 +24,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -134,6 +136,15 @@ internal fun TapTarget(
 
     val outerCircleScaleAnimatable = remember { Animatable(0f) }
     val textAlphaScaleAnimatable = remember { Animatable(0f) }
+    var lastTargetTransform by remember { mutableStateOf(Matrix()) }
+
+    val getTargetTransform = {
+        if (tapTarget.targetLayerCoordinates.isAttached) {
+            localToWindowMatrix(tapTarget.targetLayerCoordinates).also { lastTargetTransform = it }
+        } else {
+            lastTargetTransform
+        }
+    }
 
     if (targetClicked) {
         // The user tapped the target, notify the target.
@@ -254,7 +265,7 @@ internal fun TapTarget(
         },
         textAlphaProvider = { textAlphaScaleAnimatable.value },
         getTargetCenter = getTargetCenterPx,
-        getTargetBounds = getTargetBoundsPx,
+        getTargetTransform = getTargetTransform,
         outerCircleScaleProvider = { outerCircleScaleAnimatable.value },
         targetRadius = targetRadiusPx,
         outerCircleRadius = outerCircleRadiusPx,
@@ -279,7 +290,7 @@ private fun TapTargetRenderer(
     onTargetClick: () -> Unit,
     onTargetCancel: () -> Unit,
     getTargetCenter: () -> Offset,
-    getTargetBounds: () -> Rect,
+    getTargetTransform: () -> Matrix,
     outerCircleScaleProvider: () -> Float,
     textAlphaProvider: () -> Float,
     targetRadius: Float,
@@ -323,9 +334,8 @@ private fun TapTargetRenderer(
                 alpha = tapTarget.style.backgroundAlpha,
             )
 
-            val targetBounds = getTargetBounds()
             withTransform({
-                translate(targetBounds.left, targetBounds.top)
+                transform(getTargetTransform())
             }) {
                 drawLayer(tapTarget.targetLayer)
             }
@@ -399,6 +409,26 @@ private fun TapTargetRenderer(
             }
         }
     }
+}
+
+internal fun localToWindowMatrix(coordinates: LayoutCoordinates): Matrix {
+    val origin = coordinates.localToWindow(Offset.Zero)
+    val xAxis = coordinates.localToWindow(Offset(1f, 0f))
+    val yAxis = coordinates.localToWindow(Offset(0f, 1f))
+    return localToWindowMatrix(origin, xAxis, yAxis)
+}
+
+internal fun localToWindowMatrix(
+    origin: Offset,
+    xAxis: Offset,
+    yAxis: Offset,
+): Matrix = Matrix().apply {
+    this[0, 0] = xAxis.x - origin.x
+    this[0, 1] = xAxis.y - origin.y
+    this[1, 0] = yAxis.x - origin.x
+    this[1, 1] = yAxis.y - origin.y
+    this[3, 0] = origin.x
+    this[3, 1] = origin.y
 }
 
 /**
