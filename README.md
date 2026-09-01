@@ -22,7 +22,7 @@ The minimum API level supported by this library is API 29.
 Add this to your module level `build.gradle` file to start using the library.
 
 ```toml
-taptarget = { group = "zone.ien.taptargetcmp", name = "taptarget", version = "1.2.1" }
+taptarget = { group = "zone.ien.taptargetcmp", name = "taptarget", version = "2.0.0" }
 ```
 
 ```gradle
