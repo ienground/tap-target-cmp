@@ -52,6 +52,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlin.math.abs
 
 private const val DEBUG = false
 
@@ -62,16 +63,16 @@ private val TARGET_PADDING = 20.dp
 private val TEXT_HORIZONTAL_MARGIN = 40.dp
 
 /** 텍스트 블록의 세로 여백. */
-private val TEXT_VERTICAL_MARGIN = 40.dp
+private val TEXT_VERTICAL_MARGIN = 8.dp
 
 /** 바깥 원과 텍스트 사이의 여백. */
-private val OUTER_CIRCLE_INTERNAL_MARGIN = 40.dp
+private val OUTER_CIRCLE_INTERNAL_MARGIN = 12.dp
 
 /** 텍스트 블록 위에 예약하는 아이콘 영역. */
 private val ICON_CONTAINER_SIZE = 72.dp
 
 /** 아이콘 영역과 텍스트 블록 사이의 간격. */
-private val ICON_TEXT_SPACING = 16.dp
+internal val ICON_TEXT_SPACING = 12.dp
 
 /** 탭 타깃 아이콘을 그릴 때 사용하는 크기. */
 private val ICON_SIZE = 48.dp
@@ -83,7 +84,7 @@ private val MAX_TEXT_WIDTH = 360f.dp
 private val TEXT_SPACING = 2.dp
 
 /** 스킵 버튼과 설명 사이의 간격. */
-private val SKIP_BUTTON_TOP_SPACING = 16.dp
+internal val SKIP_BUTTON_TOP_SPACING = 12.dp
 
 /** 스킵 버튼 영역의 최소 높이. */
 private val SKIP_BUTTON_HEIGHT = 48.dp
@@ -126,6 +127,7 @@ internal fun TapTarget(
         max(tapTarget.coordinates.size.width, tapTarget.coordinates.size.height)
     }
     val targetRadiusPx = targetMaxDimensionPx / 2 + TARGET_PADDING.toPx(density)
+    val targetBounds = getTargetBoundsPx()
 
     // Whether we are animating in or out.
     var animateIn by remember { mutableStateOf(true) }
@@ -217,8 +219,7 @@ internal fun TapTarget(
     val contentTopLeft = getTextBlockOffset(
         Size(textWidthPx, contentBlockHeightPx),
         screenSizePx,
-        getTargetCenterPx(),
-        targetRadiusPx,
+        targetBounds,
         textHorizontalMarginPx,
         textVerticalMarginPx
     )
@@ -434,8 +435,7 @@ internal fun localToWindowMatrix(
 /**
  * Calculates and returns the top left coordinates of the text block.
  * @param textBlockSize The size of the text block.
- * @param targetCenter The center of the target.
- * @param targetRadius The radius of the target.
+ * @param targetBounds The target bounds in the window.
  * @param horizontalMargin The horizontal margin between the text block and the screen edge.
  * @param verticalMargin The vertical margin between the text block and the screen edge.
  */
@@ -444,8 +444,7 @@ internal fun localToWindowMatrix(
 internal fun getTextBlockOffset(
     textBlockSize: Size,
     screenSize: Size,
-    targetCenter: Offset,
-    targetRadius: Float,
+    targetBounds: Rect,
     horizontalMargin: Float,
     verticalMargin: Float
 ): Offset {
@@ -454,14 +453,18 @@ internal fun getTextBlockOffset(
     val xOffset = centeredX.coerceIn(horizontalMargin, maxX)
 
     // The Y coordinate of the text block, if positioned above the target.
-    val yTop = targetCenter.y - targetRadius - textBlockSize.height - verticalMargin
+    val yTop = targetBounds.top - textBlockSize.height - verticalMargin
     // The Y coordinate of the text block, if positioned below the target.
-    val yBottom = targetCenter.y + targetRadius + verticalMargin
+    val yBottom = targetBounds.bottom + verticalMargin
 
-    val yOffset = if (yTop > 0) {
-        yTop
+    val maxYOffset = (screenSize.height - textBlockSize.height).coerceAtLeast(0f)
+    val validYOffsets = listOf(yTop, yBottom).filter { it in 0f..maxYOffset }
+    val yOffset = if (validYOffsets.isNotEmpty()) {
+        val screenCenterY = screenSize.height / 2
+        validYOffsets.minBy { abs(it + textBlockSize.height / 2 - screenCenterY) }
     } else {
-        yBottom
+        val preferredYOffset = if (yTop > 0) yTop else yBottom
+        preferredYOffset.coerceIn(0f, maxYOffset)
     }
 
     return Offset(xOffset, yOffset)
