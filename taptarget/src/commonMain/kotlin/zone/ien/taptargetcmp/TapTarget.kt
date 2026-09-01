@@ -2,7 +2,7 @@ package zone.ien.taptargetcmp
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
@@ -11,16 +11,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -47,6 +52,8 @@ import androidx.compose.ui.unit.dp
  * @param state Mutable state holder for the coordinator. Useful for resetting or inspecting state.
  * @param contentAlignment Alignment of the content within the coordinator.
  * @param bringIntoViewVerticalOffset Default vertical offset applied when scrolling a target into view. Can be overridden per target.
+ * @param skipButton 활성 타깃 콘텐츠에 표시할 선택적 컴포저블. 전달받은 콜백을 호출하면 남은 타깃을
+ *   건너뛰고 [onComplete]를 호출한다. [BoxScope] 수신자를 통해 [Modifier.align]으로 위치를 지정할 수 있다.
  * @param content The composable content that contains tap-target-marked elements.
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -59,11 +66,18 @@ fun TapTargetCoordinator(
     state: TapTargetCoordinatorState = remember { TapTargetCoordinatorState() },
     contentAlignment: Alignment = Alignment.Center,
     bringIntoViewVerticalOffset: Dp = 0.dp,
+    skipButton: (@Composable BoxScope.(onSkip: () -> Unit) -> Unit)? = null,
     content: @Composable TapTargetScope.() -> Unit,
 ) {
     val tapTargetScope = remember(state, bringIntoViewVerticalOffset) { TapTargetScope(state, bringIntoViewVerticalOffset) }
-
     val density = LocalDensity.current
+    var completionHandled by remember(state) { mutableStateOf(false) }
+    val complete = {
+        if (!completionHandled) {
+            completionHandled = true
+            onComplete()
+        }
+    }
 
     LaunchedEffect(state.currentTargetIndex) {
         val target = state.currentTarget
@@ -82,27 +96,36 @@ fun TapTargetCoordinator(
         }
     }
 
-    CompositionLocalProvider(LocalTapTargetScope provides tapTargetScope) {
+    CompositionLocalProvider(
+        LocalTapTargetScope provides tapTargetScope,
+        LocalTapTargetVisibility provides showTapTargets,
+    ) {
         Box(
             contentAlignment = contentAlignment,
             modifier = modifier
         ) {
             tapTargetScope.content()
 
+            // 원본 위젯 위에 오버레이를 한 번만 그린다. 타깃 위젯 자체는 오버레이에서 다시 그린다.
             if (showTapTargets) {
                 val currentTapTarget = state.currentTarget
                 if (currentTapTarget != null) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        TapTarget(
-                            tapTarget = currentTapTarget,
-                            onComplete = {
-                                state.currentTargetIndex++
-                                if (state.currentTargetIndex >= state.tapTargets.size) {
-                                    onComplete()
-                                }
+                    TapTarget(
+                        tapTarget = currentTapTarget,
+                        animationKey = state.currentTargetIndex,
+                        skipButton = skipButton,
+                        onSkip = {
+                            if (state.skipToEnd()) {
+                                complete()
                             }
-                        )
-                    }
+                        },
+                        onComplete = {
+                            state.currentTargetIndex++
+                            if (state.currentTargetIndex >= state.tapTargets.size) {
+                                complete()
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -133,6 +156,8 @@ class TapTargetScope internal constructor(
      * @param bringIntoViewVerticalOffset Vertical offset (in Dp) above the element when scrolling into view.
      *   Falls back to [TapTargetScope.defaultBringIntoViewVerticalOffset] when `null`.
      * @param bringIntoViewRequester Optional custom [BringIntoViewRequester]. If `null`, one is created automatically.
+     * @param icon 제목과 설명 위에 표시할 선택적 아이콘.
+     * @param iconWrapper [icon]을 감싸는 선택적 컴포저블. `null`이면 적용하지 않는다.
      */
     @OptIn(ExperimentalFoundationApi::class)
     fun Modifier.tapTarget(
@@ -145,24 +170,55 @@ class TapTargetScope internal constructor(
         bringIntoViewEnabled: Boolean = true,
         bringIntoViewVerticalOffset: Dp? = null,
         bringIntoViewRequester: BringIntoViewRequester? = null,
-    ): Modifier = composed {
-        val requester = bringIntoViewRequester ?: remember { BringIntoViewRequester() }
-        val offset = bringIntoViewVerticalOffset ?: defaultBringIntoViewVerticalOffset
-        onGloballyPositioned { layoutCoordinates ->
-            state.tapTargets[precedence] = TapTarget(
-                precedence = precedence,
-                coordinates = layoutCoordinates,
-                title = title,
-                description = description,
-                style = tapTargetStyle,
-                onTargetClick = onTargetClick,
-                onTargetCancel = onTargetCancel,
-                bringIntoViewEnabled = bringIntoViewEnabled,
-                bringIntoViewVerticalOffset = offset,
-                bringIntoViewRequester = requester,
+        icon: ImageVector? = null,
+        iconWrapper: (@Composable (content: @Composable () -> Unit) -> Unit)? = null,
+    ): Modifier {
+        val targetModifier = this
+        return Modifier.composed {
+            val requester = bringIntoViewRequester ?: remember { BringIntoViewRequester() }
+            val targetLayer = rememberGraphicsLayer()
+            val targetLayerCoordinates = remember { mutableStateOf<LayoutCoordinates?>(null) }
+            val offset = bringIntoViewVerticalOffset ?: defaultBringIntoViewVerticalOffset
+            val shouldRecordLayer = shouldRecordTargetLayer(
+                showTapTargets = LocalTapTargetVisibility.current,
+                activePrecedence = state.currentTarget?.precedence,
+                targetPrecedence = precedence,
             )
+
+            Modifier
+                .drawWithContent {
+                    if (shouldRecordLayer) {
+                        val contentDrawScope = this@drawWithContent
+                        targetLayer.record {
+                            contentDrawScope.drawContent()
+                        }
+                    }
+                    drawContent()
+                }
+                .onGloballyPositioned { layoutCoordinates ->
+                    targetLayerCoordinates.value = layoutCoordinates
+                }
+                .then(targetModifier)
+                .onGloballyPositioned { layoutCoordinates ->
+                    state.tapTargets[precedence] = TapTarget(
+                        precedence = precedence,
+                        coordinates = layoutCoordinates,
+                        targetLayerCoordinates = targetLayerCoordinates.value ?: layoutCoordinates,
+                        title = title,
+                        description = description,
+                        style = tapTargetStyle,
+                        onTargetClick = onTargetClick,
+                        onTargetCancel = onTargetCancel,
+                        bringIntoViewEnabled = bringIntoViewEnabled,
+                        bringIntoViewVerticalOffset = offset,
+                        bringIntoViewRequester = requester,
+                        icon = icon,
+                        iconWrapper = iconWrapper,
+                        targetLayer = targetLayer,
+                    )
+                }
+                .bringIntoViewRequester(requester)
         }
-            .bringIntoViewRequester(requester)
     }
 
     /**
@@ -180,6 +236,8 @@ class TapTargetScope internal constructor(
             tapTargetDefinition.onTargetCancel,
             tapTargetDefinition.bringIntoViewEnabled,
             tapTargetDefinition.bringIntoViewVerticalOffset,
+            icon = tapTargetDefinition.icon,
+            iconWrapper = tapTargetDefinition.iconWrapper,
         )
     }
 }
@@ -188,6 +246,14 @@ class TapTargetScope internal constructor(
  * CompositionLocal holding the current [TapTargetScope], used by [Modifier.ifTapTarget].
  */
 val LocalTapTargetScope = staticCompositionLocalOf<TapTargetScope?> { null }
+
+private val LocalTapTargetVisibility = staticCompositionLocalOf { false }
+
+internal fun shouldRecordTargetLayer(
+    showTapTargets: Boolean,
+    activePrecedence: Int?,
+    targetPrecedence: Int,
+): Boolean = showTapTargets && activePrecedence == targetPrecedence
 
 /**
  * Conditionally applies [TapTargetScope.tapTarget] only when inside a [TapTargetCoordinator]
@@ -215,6 +281,8 @@ fun Modifier.ifTapTarget(definition: TapTargetDefinition?): Modifier = composed 
  * @param onTargetCancel Called when the user taps outside the target.
  * @param bringIntoViewEnabled Whether to auto-scroll this element into view when active.
  * @param bringIntoViewVerticalOffset Vertical offset when scrolling into view. `null` uses the coordinator default.
+ * @param icon 제목과 설명 위에 표시할 선택적 아이콘.
+ * @param iconWrapper [icon]을 감싸는 선택적 컴포저블. `null`이면 적용하지 않는다.
  */
 data class TapTargetDefinition(
     val title: TextDefinition,
@@ -225,6 +293,8 @@ data class TapTargetDefinition(
     val onTargetCancel: () -> Unit = { },
     val bringIntoViewEnabled: Boolean = true,
     val bringIntoViewVerticalOffset: Dp? = null,
+    val icon: ImageVector? = null,
+    val iconWrapper: (@Composable (content: @Composable () -> Unit) -> Unit)? = null,
 )
 
 /**
@@ -239,6 +309,12 @@ class TapTargetCoordinatorState internal constructor() {
     internal var currentTargetIndex by mutableIntStateOf(0)
     val currentTarget: TapTarget?
         get() = tapTargets.keys.sorted().getOrNull(currentTargetIndex)?.let { tapTargets[it] }
+
+    internal fun skipToEnd(): Boolean {
+        val skippedIndex = skipTargetIndex(currentTargetIndex, tapTargets.size) ?: return false
+        currentTargetIndex = skippedIndex
+        return true
+    }
 }
 
 class TapTarget internal constructor(
@@ -246,11 +322,15 @@ class TapTarget internal constructor(
     val title: TextDefinition,
     val description: TextDefinition,
     val coordinates: LayoutCoordinates,
+    internal val targetLayerCoordinates: LayoutCoordinates,
     val style: TapTargetStyle = TapTargetStyle.Default,
     val onTargetClick: () -> Unit,
     val onTargetCancel: () -> Unit,
     val bringIntoViewEnabled: Boolean = true,
     val bringIntoViewVerticalOffset: Dp = 0.dp,
+    val icon: ImageVector? = null,
+    val iconWrapper: (@Composable (content: @Composable () -> Unit) -> Unit)? = null,
+    internal val targetLayer: GraphicsLayer,
     @Suppress("EXPERIMENTAL_API_USAGE")
     val bringIntoViewRequester: BringIntoViewRequester = BringIntoViewRequester(),
 )
@@ -296,7 +376,7 @@ data class TextDefinition(
  *
  * @param backgroundColor Background color of the outer circle and text block area.
  * @param backgroundAlpha Alpha value for the background color (0.0 – 1.0).
- * @param tapTargetHighlightColor Color of the highlight circle and the XOR-revealed area over the target.
+ * @param tapTargetHighlightColor 오버레이의 선택적 아이콘에 적용할 색상.
  */
 data class TapTargetStyle(
     val backgroundColor: Color = Color.Blue,
