@@ -63,7 +63,7 @@ private val TARGET_PADDING = 20.dp
 private val TEXT_HORIZONTAL_MARGIN = 40.dp
 
 /** 텍스트 블록의 세로 여백. */
-private val TEXT_VERTICAL_MARGIN = 8.dp
+internal val TEXT_VERTICAL_MARGIN = 12.dp
 
 /** 바깥 원과 텍스트 사이의 여백. */
 private val OUTER_CIRCLE_INTERNAL_MARGIN = 12.dp
@@ -81,7 +81,7 @@ private val ICON_SIZE = 48.dp
 private val MAX_TEXT_WIDTH = 360f.dp
 
 /** 제목과 설명 텍스트 사이의 간격. */
-private val TEXT_SPACING = 2.dp
+internal val TEXT_SPACING = 8.dp
 
 /** 스킵 버튼과 설명 사이의 간격. */
 internal val SKIP_BUTTON_TOP_SPACING = 12.dp
@@ -437,7 +437,7 @@ internal fun localToWindowMatrix(
  * @param textBlockSize The size of the text block.
  * @param targetBounds The target bounds in the window.
  * @param horizontalMargin The horizontal margin between the text block and the screen edge.
- * @param verticalMargin The vertical margin between the text block and the screen edge.
+ * @param verticalMargin The vertical margin between the target and the content block.
  */
 // TODO(issue#3) the entire screen size is used to position the text block,
 //  therefore it might overlap the status bar.

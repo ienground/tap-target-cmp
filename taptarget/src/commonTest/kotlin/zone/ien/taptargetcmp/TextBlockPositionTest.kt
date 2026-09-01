@@ -48,6 +48,16 @@ class TextBlockPositionTest {
     }
 
     @Test
+    fun title_keeps_a_readable_gap_from_the_description() {
+        assertEquals(8.dp, TEXT_SPACING)
+    }
+
+    @Test
+    fun content_keeps_a_readable_gap_from_the_target() {
+        assertEquals(12.dp, TEXT_VERTICAL_MARGIN)
+    }
+
+    @Test
     fun text_block_prefers_the_side_closer_to_the_screen_center() {
         val offset = getTextBlockOffset(
             textBlockSize = Size(width = 200f, height = 100f),
