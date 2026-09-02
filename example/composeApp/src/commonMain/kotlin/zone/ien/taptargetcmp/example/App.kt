@@ -9,13 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -27,8 +30,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +45,7 @@ import zone.ien.taptargetcmp.TapTargetStyle
 import zone.ien.taptargetcmp.TextDefinition
 import zone.ien.taptargetcmp.example.icon.Add
 import zone.ien.taptargetcmp.example.icon.MaterialIcons
+import zone.ien.taptargetcmp.example.icon.SkipNext
 import zone.ien.taptargetcmp.example.ui.theme.AppTheme
 
 @Composable
@@ -48,6 +54,17 @@ fun App() {
     AppTheme {
         TapTargetCoordinator(
             showTapTargets = true,
+            skipButton = { onSkip ->
+                FilledIconButton(
+                    onClick = onSkip,
+                    modifier = Modifier.align(Alignment.Center),
+                ) {
+                    Icon(
+                        imageVector = MaterialIcons.SkipNext,
+                        contentDescription = "Skip",
+                    )
+                }
+            },
             onTargetChanged = { precedence ->
                 println("this tap target $precedence")
             },
@@ -97,6 +114,17 @@ private fun TapTargetScope.Content() {
                         precedence = 150,
                         title = "Button tap target",
                         description = "This is a button, tap it!",
+                        icon = MaterialIcons.Add,
+                        iconWrapper = { content ->
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .background(Color.White, CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                content()
+                            }
+                        },
                     )
                 ),
             )
@@ -252,6 +280,8 @@ private fun getStandardTapTargetDefinition(
     bringIntoViewEnabled: Boolean = true,
     onTargetCLick: () -> Unit = {},
     onTargetCancel: () -> Unit = {},
+    icon: ImageVector? = null,
+    iconWrapper: (@Composable (content: @Composable () -> Unit) -> Unit)? = null,
 ): TapTargetDefinition {
     return TapTargetDefinition(
         precedence = precedence,
@@ -273,6 +303,8 @@ private fun getStandardTapTargetDefinition(
         ),
         onTargetClick = onTargetCLick,
         onTargetCancel = onTargetCancel,
-        bringIntoViewEnabled = bringIntoViewEnabled
+        bringIntoViewEnabled = bringIntoViewEnabled,
+        icon = icon,
+        iconWrapper = iconWrapper,
     )
 }

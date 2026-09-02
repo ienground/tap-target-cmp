@@ -20,3 +20,7 @@ internal fun Offset.distanceTo(other: Offset): Float {
 }
 
 internal fun max(vararg values: Float) = values.max()
+
+internal fun skipTargetIndex(currentIndex: Int, targetCount: Int): Int? {
+  return targetCount.takeIf { currentIndex < it }
+}

@@ -1,14 +1,14 @@
 [versions]
-agp = "9.1.0"
-kotlin = "2.4.0"
+agp = "9.1.1"
+kotlin = "2.4.20-RC2"
 android-minSdk = "29"
-android-compileSdk = "36"
-android-targetSdk = "36"
-lib-version-name = "1.3.2"
+android-compileSdk = "37"
+android-targetSdk = "37"
+lib-version-name = "2.0.0"
 
 # plugin
-compose-plugin = "1.11.1"
-compose-plugin-experimental = "1.11.0-alpha07"
+compose-plugin = "1.12.0"
+compose-plugin-experimental = "1.12.0-alpha03"
 compose-navigation3 = "1.1.1"
 
 # ui
@@ -18,7 +18,7 @@ activity-compose = "1.13.0"
 androidx-core = "1.19.0"
 
 # backend
-vanniktechMavenPublish = "0.36.0"
+vanniktechMavenPublish = "0.37.0"
 
 # test
 runner = "1.7.0"

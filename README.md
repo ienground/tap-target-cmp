@@ -22,7 +22,7 @@ The minimum API level supported by this library is API 29.
 Add this to your module level `build.gradle` file to start using the library.
 
 ```toml
-taptarget = { group = "zone.ien.taptargetcmp", name = "taptarget", version = "1.2.1" }
+taptarget = { group = "zone.ien.taptargetcmp", name = "taptarget", version = "2.0.0" }
 ```
 
 ```gradle
@@ -101,6 +101,27 @@ TapTargetCoordinator(showTapTargets = true, onComplete = {}) {
 ```
 
 The library supports chaining of multiple tap targets, but you can also show only one if that's what you need.
+
+## Skip button
+
+`TapTargetCoordinator`에 `skipButton`을 전달하면 각 활성 타깃의 설명 아래에 현재 안내를 건너뛸 수 있는 UI를 원하는 형태로 구성할 수 있습니다. 슬롯에 전달되는 콜백을 호출하면 남은 모든 타깃을 종료하고 `onComplete`가 호출됩니다. `BoxScope` 수신자를 사용하므로 타깃 콘텐츠 영역 안에서 `Modifier.align`으로 위치를 지정할 수 있습니다.
+
+```kotlin
+TapTargetCoordinator(
+    showTapTargets = true,
+    skipButton = { onSkip ->
+        TextButton(
+            onClick = onSkip,
+            modifier = Modifier.align(Alignment.Center),
+        ) {
+            Text("Skip")
+        }
+    },
+    onComplete = { },
+) {
+    // tap-target content
+}
+```
 
 ## Bring Into View
 
