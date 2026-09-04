@@ -29,7 +29,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +42,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.backdrops.layerBackdrop
 import kotlinx.coroutines.launch
 import zone.ien.taptargetcmp.TapTargetCoordinator
 import zone.ien.taptargetcmp.TapTargetDefinition
@@ -47,6 +53,7 @@ import zone.ien.taptargetcmp.example.icon.Add
 import zone.ien.taptargetcmp.example.icon.MaterialIcons
 import zone.ien.taptargetcmp.example.icon.SkipNext
 import zone.ien.taptargetcmp.example.ui.theme.AppTheme
+import zone.ien.hig.utils.rememberDefaultBackdrop
 
 @Composable
 @Preview
@@ -83,6 +90,11 @@ fun App() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TapTargetScope.Content() {
+    var uikitClickCount by remember { mutableIntStateOf(0) }
+    var cupertinoClickCount by remember { mutableIntStateOf(0) }
+    var selectedRoom by remember { mutableStateOf("My room") }
+    val cupertinoButtonBackdrop = rememberDefaultBackdrop()
+
     val toolbarTapTarget = getStandardTapTargetDefinition(
         precedence = 350,
         title = "Toolbar tap target",
@@ -141,6 +153,65 @@ private fun TapTargetScope.Content() {
                                 .background(Color.Black)
                                 .fillMaxSize()
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .padding(horizontal = 16.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .background(Color.Black)
+                                        .layerBackdrop(cupertinoButtonBackdrop),
+                                )
+                                CupertinoLiquidButtonExample(
+                                    text = "Cupertino button ($cupertinoClickCount)",
+                                    backdrop = cupertinoButtonBackdrop,
+                                    onClick = { cupertinoClickCount++ },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .tapTarget(
+                                            getStandardTapTargetDefinition(
+                                                precedence = 50,
+                                                title = "CupertinoLiquidButton tap target",
+                                                description = "This is a compose-hig CupertinoLiquidButton, tap it!",
+
+                                            )
+                                        ),
+                                )
+                            }
+                            UIKitButton(
+                                text = "UIKit button ($uikitClickCount)",
+                                onClick = { uikitClickCount++ },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .padding(horizontal = 16.dp)
+                                    .tapTarget(
+                                        getStandardTapTargetDefinition(
+                                            precedence = 100,
+                                            title = "UIKit button tap target",
+                                            description = "This is a UIKit button, tap it!",
+                                        )
+                                    ),
+                            )
+                            NativeDropdown(
+                                text = "Room: $selectedRoom",
+                                options = listOf("My room", "Room A", "Room B"),
+                                onOptionSelected = { selectedRoom = it },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .padding(horizontal = 16.dp)
+                                    .tapTarget(
+                                        getStandardTapTargetDefinition(
+                                            precedence = 0,
+                                            title = "Calendar room dropdown",
+                                            description = "Choose a room from the dropdown.",
+                                        )
+                                    ),
+                            )
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()

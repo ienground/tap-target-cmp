@@ -1,10 +1,10 @@
 [versions]
 agp = "9.1.1"
-kotlin = "2.4.20-RC2"
+kotlin = "2.4.20-RC3"
 android-minSdk = "29"
 android-compileSdk = "37"
 android-targetSdk = "37"
-lib-version-name = "2.0.0"
+lib-version-name = "2.0.1"
 
 # plugin
 compose-plugin = "1.12.0"
@@ -13,6 +13,8 @@ compose-navigation3 = "1.1.1"
 
 # ui
 activity-compose = "1.13.0"
+hig = "1.3.1"
+backdrop = "2.0.1"
 
 # functionality
 androidx-core = "1.19.0"
@@ -32,6 +34,8 @@ compose-material3 = { group = "org.jetbrains.compose.material3", name = "materia
 compose-preview = { group = "org.jetbrains.compose.ui", name = "ui-tooling-preview", version.ref = "compose-plugin" }
 compose-ui-tooling = { group = "org.jetbrains.compose.ui", name = "ui-tooling", version.ref = "compose-plugin" }
 compose-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "compose-plugin" }
+hig = { group = "zone.ien.hig", name = "hig", version.ref = "hig" }
+backdrop = { group = "io.github.kyant0", name = "backdrop", version.ref = "backdrop" }
 
 # functionality
 androidx-core = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core"} # android only

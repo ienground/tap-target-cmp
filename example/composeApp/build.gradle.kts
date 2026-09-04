@@ -37,6 +37,8 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.compose.material3)
             implementation(libs.compose.preview)
+            implementation(libs.hig)
+            implementation(libs.backdrop)
             implementation(projects.taptarget)
         }
         commonTest.dependencies {

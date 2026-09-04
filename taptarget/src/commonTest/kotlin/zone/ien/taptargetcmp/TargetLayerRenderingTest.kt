@@ -1,12 +1,24 @@
 package zone.ien.taptargetcmp
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TargetLayerRenderingTest {
+    @Test
+    fun target_bounds_are_converted_from_window_to_canvas_coordinates() {
+        val targetBoundsInWindow = Rect(110f, 220f, 210f, 320f)
+        val canvasBoundsInWindow = Rect(10f, 20f, 510f, 820f)
+
+        assertEquals(
+            Rect(100f, 200f, 200f, 300f),
+            targetBoundsInCanvas(targetBoundsInWindow, canvasBoundsInWindow),
+        )
+    }
+
     @Test
     fun target_layer_is_not_recorded_when_overlay_is_hidden() {
         assertFalse(

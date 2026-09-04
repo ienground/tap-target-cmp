@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.AnnotatedString
@@ -102,7 +103,10 @@ internal fun TapTarget(
 ) {
     val density = LocalDensity.current
     val containerSize = LocalWindowInfo.current.containerSize
-    val screenSizePx = Size(
+    var canvasCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val screenSizePx = canvasCoordinates?.let { coordinates ->
+        Size(coordinates.size.width.toFloat(), coordinates.size.height.toFloat())
+    } ?: Size(
         containerSize.width.toFloat(),
         containerSize.height.toFloat()
     )
@@ -111,8 +115,17 @@ internal fun TapTarget(
     // For moving targets, the coordinates can change, use a function
     // to always get the latest.
     val getTargetBoundsPx = {
-        if (tapTarget.coordinates.isAttached) {
-            val bounds = tapTarget.coordinates.boundsInWindow()
+        val targetCoordinates = tapTarget.coordinates
+        val canvas = canvasCoordinates
+        if (targetCoordinates.isAttached && canvas?.isAttached == true) {
+            val bounds = targetBoundsInCanvas(
+                targetBoundsInWindow = targetCoordinates.boundsInWindow(),
+                canvasBoundsInWindow = canvas.boundsInWindow(),
+            )
+            lastTargetBounds = bounds
+            bounds
+        } else if (targetCoordinates.isAttached) {
+            val bounds = targetCoordinates.boundsInWindow()
             lastTargetBounds = bounds
             bounds
         } else {
@@ -141,8 +154,12 @@ internal fun TapTarget(
     var lastTargetTransform by remember { mutableStateOf(Matrix()) }
 
     val getTargetTransform = {
-        if (tapTarget.targetLayerCoordinates.isAttached) {
-            localToWindowMatrix(tapTarget.targetLayerCoordinates).also { lastTargetTransform = it }
+        val canvas = canvasCoordinates
+        if (tapTarget.targetLayerCoordinates.isAttached && canvas?.isAttached == true) {
+            localToCanvasMatrix(
+                coordinates = tapTarget.targetLayerCoordinates,
+                canvasCoordinates = canvas,
+            ).also { lastTargetTransform = it }
         } else {
             lastTargetTransform
         }
@@ -254,34 +271,38 @@ internal fun TapTarget(
 
     val outerCircleRadiusPx = maxRadius + OUTER_CIRCLE_INTERNAL_MARGIN.toPx(density)
 
-    TapTargetRenderer(
-        tapTarget,
-        onTargetCancel = {
-            targetCancelled = true
-            animateIn = false
-        },
-        onTargetClick = {
-            targetClicked = true
-            animateIn = false
-        },
-        textAlphaProvider = { textAlphaScaleAnimatable.value },
-        getTargetCenter = getTargetCenterPx,
-        getTargetTransform = getTargetTransform,
-        outerCircleScaleProvider = { outerCircleScaleAnimatable.value },
-        targetRadius = targetRadiusPx,
-        outerCircleRadius = outerCircleRadiusPx,
-        iconTopLeft = if (tapTarget.icon != null) contentTopLeft else null,
-        iconContainerSizePx = ICON_CONTAINER_SIZE.toPx(density),
-        textBlockTopLeft = textBlockTopLeft,
-        textBlockWidth = textWidthPx,
-        skipButton = skipButton,
-        onSkip = onSkip,
-        skipButtonTopLeft = skipButtonTopLeft,
-        skipButtonWidth = with(density) { textWidthPx.toDp() },
-        titleMeasure = titleMeasure,
-        descriptionMeasure = descriptionMeasure,
-        textBlockRect = textBlockRect,
-    )
+    Overlay(animationKey) {
+        TapTargetRenderer(
+            tapTarget,
+            onTargetCancel = {
+                targetCancelled = true
+                animateIn = false
+            },
+            onTargetClick = {
+                targetClicked = true
+                animateIn = false
+            },
+            textAlphaProvider = { textAlphaScaleAnimatable.value },
+            getTargetCenter = getTargetCenterPx,
+            getTargetTransform = getTargetTransform,
+            outerCircleScaleProvider = { outerCircleScaleAnimatable.value },
+            targetRadius = targetRadiusPx,
+            outerCircleRadius = outerCircleRadiusPx,
+            iconTopLeft = if (tapTarget.icon != null) contentTopLeft else null,
+            iconContainerSizePx = ICON_CONTAINER_SIZE.toPx(density),
+            textBlockTopLeft = textBlockTopLeft,
+            textBlockWidth = textWidthPx,
+            skipButton = skipButton,
+            onSkip = onSkip,
+            skipButtonTopLeft = skipButtonTopLeft,
+            skipButtonWidth = with(density) { textWidthPx.toDp() },
+            titleMeasure = titleMeasure,
+            descriptionMeasure = descriptionMeasure,
+            textBlockRect = textBlockRect,
+            canvasCoordinates = canvasCoordinates,
+            onCanvasPositioned = { canvasCoordinates = it },
+        )
+    }
 }
 
 /** Component that draws the tap target. */
@@ -306,13 +327,16 @@ private fun TapTargetRenderer(
     skipButtonWidth: Dp,
     titleMeasure: TextLayoutResult,
     descriptionMeasure: TextLayoutResult,
-    textBlockRect: Rect
+    textBlockRect: Rect,
+    canvasCoordinates: LayoutCoordinates?,
+    onCanvasPositioned: (LayoutCoordinates) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(tapTarget) {
+                .onGloballyPositioned(onCanvasPositioned)
+                .pointerInput(tapTarget, canvasCoordinates) {
                     detectTapGestures { tapOffset ->
                         when {
                             tapOffset.isOutsideCircle(getTargetCenter(), outerCircleRadius) -> {
@@ -410,6 +434,31 @@ private fun TapTargetRenderer(
             }
         }
     }
+}
+
+internal fun targetBoundsInCanvas(
+    targetBoundsInWindow: Rect,
+    canvasBoundsInWindow: Rect,
+): Rect {
+    val canvasOrigin = canvasBoundsInWindow.topLeft
+    return Rect(
+        left = targetBoundsInWindow.left - canvasOrigin.x,
+        top = targetBoundsInWindow.top - canvasOrigin.y,
+        right = targetBoundsInWindow.right - canvasOrigin.x,
+        bottom = targetBoundsInWindow.bottom - canvasOrigin.y,
+    )
+}
+
+internal fun localToCanvasMatrix(
+    coordinates: LayoutCoordinates,
+    canvasCoordinates: LayoutCoordinates,
+): Matrix {
+    val canvasOrigin = canvasCoordinates.boundsInWindow().topLeft
+    return localToWindowMatrix(
+        origin = coordinates.localToWindow(Offset.Zero) - canvasOrigin,
+        xAxis = coordinates.localToWindow(Offset(1f, 0f)) - canvasOrigin,
+        yAxis = coordinates.localToWindow(Offset(0f, 1f)) - canvasOrigin,
+    )
 }
 
 internal fun localToWindowMatrix(coordinates: LayoutCoordinates): Matrix {
@@ -551,6 +600,7 @@ internal fun Overlay(
                 focusable = true,
                 dismissOnBackPress = false,
                 dismissOnClickOutside = false,
+                clippingEnabled = false,
             )
         ) {
             content()
