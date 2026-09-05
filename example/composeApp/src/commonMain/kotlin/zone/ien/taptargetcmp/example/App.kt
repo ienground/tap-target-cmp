@@ -170,7 +170,6 @@ private fun TapTargetScope.Content() {
                                     backdrop = cupertinoButtonBackdrop,
                                     onClick = { cupertinoClickCount++ },
                                     modifier = Modifier
-                                        .fillMaxWidth()
                                         .tapTarget(
                                             getStandardTapTargetDefinition(
                                                 precedence = 50,

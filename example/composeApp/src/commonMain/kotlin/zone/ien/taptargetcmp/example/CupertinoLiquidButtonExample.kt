@@ -12,15 +12,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -39,12 +41,17 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import zone.ien.hig.CupertinoButtonSize
+import zone.ien.hig.CupertinoLiquidButton
 import zone.ien.hig.CupertinoLiquidButtonColors
 import zone.ien.hig.CupertinoLiquidButtonDefaults.glassButtonColors
+import zone.ien.hig.CupertinoLiquidIconButton
+import zone.ien.hig.CupertinoSwitch
 import zone.ien.hig.ExperimentalCupertinoApi
 import zone.ien.hig.LocalContentColor
 import zone.ien.hig.theme.CupertinoTheme
 import zone.ien.hig.utils.InteractiveHighlight
+import zone.ien.taptargetcmp.example.icon.Add
+import zone.ien.taptargetcmp.example.icon.MaterialIcons
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -60,16 +67,36 @@ internal fun CupertinoLiquidButtonExample(
     backdrop: LayerBackdrop,
     onClick: () -> Unit,
 ) {
+    var checked by remember { mutableStateOf(false) }
+    CupertinoSwitch(
+        checked = checked,
+        onCheckedChange = { checked = it },
+        backdrop = backdrop,
+        modifier = modifier
+    )
+//    CupertinoLiquidIconButton(
+//        onClick = onClick,
+//        modifier = modifier,
+//        isInteractive = true,
+//        isBackgroundAdaptive = true,
+//        backdrop = backdrop,
+//    ) {
+//        Icon(
+//            imageVector = MaterialIcons.Add,
+//            contentDescription = "Add",
+//        )
+//    }
 //    CupertinoLiquidButton(
 //        onClick = onClick,
 //        modifier = modifier,
-//        isInteractive = false,
-//        isBackgroundAdaptive = false,
+//        isInteractive = true,
+//        isBackgroundAdaptive = true,
 //        backdrop = backdrop,
 //    ) {
 //        Text(text)
 //    }
 
+    /*
     val enabled: Boolean = true
     val size: CupertinoButtonSize = CupertinoButtonSize.Regular
     val colors: CupertinoLiquidButtonColors = glassButtonColors()
@@ -103,7 +130,7 @@ internal fun CupertinoLiquidButtonExample(
     val surfaceColorAnimation = remember(enabled) { ColorAnimatable(if (isLightTheme) lightSurfaceColor else darkSurfaceColor) }
     val contentColorAnimation = remember(enabled) { ColorAnimatable(if (isLightTheme) lightContentColor else darkContentColor) }
 
-    Box(modifier = Modifier.fillMaxWidth()) {
+    Box {
         Box(modifier = modifier.height(48.dp)) {
             Canvas(Modifier.fillMaxSize()) {
                 drawLayer(targetGraphicsLayer)
@@ -112,7 +139,6 @@ internal fun CupertinoLiquidButtonExample(
 
         Row(
             modifier = Modifier
-                .fillMaxWidth()
                 .drawWithContent {
                     targetGraphicsLayer.record {
                         this@drawWithContent.drawContent()
@@ -212,4 +238,6 @@ internal fun CupertinoLiquidButtonExample(
         }
 
     }
+
+     */
 }
