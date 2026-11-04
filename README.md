@@ -44,9 +44,11 @@ This fork of [tap-target-compose](https://github.com/PierfrancescoSoffritti/tap-
 
 | Android | iOS |
 | --- | --- |
-| [<img src=".github/android_demo.gif" width="280" alt="Pixel 7a recording of target transitions and scrolling">](.github/android_demo.mp4) | [<img src=".github/ios_example.gif" width="280" alt="iOS sample showing an animated feature-discovery tour">](.github/ios_example.gif) |
+| [<img src=".github/android_demo.gif" width="280" alt="Pixel 7a recording of target transitions and scrolling">](.github/android_demo.mp4) | [<img src=".github/ios_demo.gif" width="280" alt="iPhone 18 Pro simulator recording of target transitions, scrolling, and skipping">](.github/ios_demo.mp4) |
 
-[Watch or download the Android MP4](.github/android_demo.mp4). Recorded from this source build on a physical **Pixel 7a running Android 17**, showing the wrapped icon, target transitions, and automatic scrolling. The 18-second recording omits the system status and navigation bars. The iOS preview is an existing recording; the [previous Android capture](.github/android_example.gif) is also preserved.
+[Watch or download the Android MP4](.github/android_demo.mp4). Recorded from this source build on a physical **Pixel 7a running Android 17**, showing the wrapped icon, target transitions, and automatic scrolling. The 18-second recording omits the system status and navigation bars. The [previous Android capture](.github/android_example.gif) is also preserved.
+
+[Watch or download the iOS MP4](.github/ios_demo.mp4). Recorded from this source build on the **iPhone 18 Pro simulator running iOS 27.0**, showing the wrapped icon, target transitions, automatic scrolling, and skipping the remaining tour. The 24-second edit removes waiting between interactions and omits the system status and home-indicator areas. The [previous iOS capture](.github/ios_example.gif) is also preserved.
 
 Explore the [shared sample screen](example/composeApp/src/commonMain/kotlin/zone/ien/taptargetcmp/example/App.kt) for toolbar, floating-action-button, tab, and scrollable targets.
 

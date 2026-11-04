@@ -47,9 +47,11 @@ Compose Multiplatform으로 구현한 Android·iOS용 애니메이션 기능 안
 
 | Android | iOS |
 | --- | --- |
-| [<img src=".github/android_demo.gif" width="280" alt="Pixel 7a에서 촬영한 타깃 전환과 스크롤">](.github/android_demo.mp4) | [<img src=".github/ios_example.gif" width="280" alt="iOS 샘플의 애니메이션 기능 안내">](.github/ios_example.gif) |
+| [<img src=".github/android_demo.gif" width="280" alt="Pixel 7a에서 촬영한 타깃 전환과 스크롤">](.github/android_demo.mp4) | [<img src=".github/ios_demo.gif" width="280" alt="iPhone 18 Pro 시뮬레이터의 타깃 전환, 스크롤, 안내 건너뛰기">](.github/ios_demo.mp4) |
 
-[Android MP4 재생 또는 다운로드](.github/android_demo.mp4). 현재 소스로 빌드한 샘플을 **Android 17을 실행하는 Pixel 7a 실기기**에서 촬영했습니다. 아이콘 래퍼, 타깃 전환, 자동 스크롤을 보여줍니다. 18초 영상에서 시스템 상태 표시줄과 내비게이션 영역은 제외했습니다. iOS 미리보기는 기존 녹화이며, [이전 Android 녹화](.github/android_example.gif)도 보존했습니다.
+[Android MP4 재생 또는 다운로드](.github/android_demo.mp4). 현재 소스로 빌드한 샘플을 **Android 17을 실행하는 Pixel 7a 실기기**에서 촬영했습니다. 아이콘 래퍼, 타깃 전환, 자동 스크롤을 보여줍니다. 18초 영상에서 시스템 상태 표시줄과 내비게이션 영역은 제외했습니다. [이전 Android 녹화](.github/android_example.gif)도 보존했습니다.
+
+[iOS MP4 재생 또는 다운로드](.github/ios_demo.mp4). 현재 소스로 빌드한 샘플을 **iOS 27.0의 iPhone 18 Pro 시뮬레이터**에서 촬영했습니다. 아이콘 래퍼, 타깃 전환, 자동 스크롤, 남은 안내 건너뛰기를 보여줍니다. 조작 사이의 대기 시간을 줄인 24초 영상이며 시스템 상태 표시줄과 홈 인디케이터 영역은 제외했습니다. [이전 iOS 녹화](.github/ios_example.gif)도 보존했습니다.
 
 [공통 샘플 화면](example/composeApp/src/commonMain/kotlin/zone/ien/taptargetcmp/example/App.kt)에서 툴바, 플로팅 액션 버튼, 탭, 스크롤 영역의 타깃을 확인할 수 있습니다.
 
