@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 384 384" fill="none" role="img" aria-labelledby="icon-title icon-desc" version="1.1">
+  <title id="icon-title">Tap Target CMP</title>
+  <desc id="icon-desc">오른쪽 아래 모서리에서 퍼지는 원형 강조 영역과 화면 정중앙의 플러스 버튼으로 기능 발견을 표현한 아이콘</desc>
+  <defs>
+    <clipPath id="screen-clip">
+      <rect x="40" y="36" width="304" height="300" rx="48" />
+    </clipPath>
+    <linearGradient id="screen-face" x1="40" y1="36" x2="344" y2="336" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7372FD" />
+      <stop offset=".38" stop-color="#7270FA" />
+      <stop offset="1" stop-color="#5746E4" />
+    </linearGradient>
+    <linearGradient id="screen-base" x1="192" y1="268" x2="192" y2="348" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B8DCFC" />
+      <stop offset="1" stop-color="#BAE3FF" />
+    </linearGradient>
+    <linearGradient id="spotlight" x1="40" y1="36" x2="344" y2="336" gradientUnits="userSpaceOnUse">
+      <stop offset=".311843" stop-color="#54A0FA" />
+      <stop offset="1" stop-color="#4FA1FE" />
+    </linearGradient>
+    <radialGradient id="corner-glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(344 336) scale(220)">
+      <stop stop-color="#AAA5FF" />
+      <stop offset="1" stop-color="#AAA5FF" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect x="40" y="48" width="304" height="300" rx="48" fill="url(#screen-base)" />
+  <g fill="url(#spotlight)">
+    <rect x="40" y="36" width="304" height="300" rx="48" />
+  </g>
+  <g fill="url(#corner-glow)">
+    <rect x="40" y="36" width="304" height="300" rx="48" />
+  </g>
+  <g clip-path="url(#screen-clip)">
+    <path d="M40 36H344V336H40ZM664 336A320 320 0 1 1 24 336A320 320 0 1 1 664 336Z" fill="url(#screen-face)" fill-rule="evenodd" />
+  </g>
+  <circle cx="192" cy="192" r="46" fill="white" />
+  <path d="M176 192H208M192 176V208" stroke="#5746E4" stroke-width="12" stroke-linecap="round" />
+</svg>
