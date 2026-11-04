@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -308,24 +309,18 @@ private fun TapTargetRenderer(
     descriptionMeasure: TextLayoutResult,
     textBlockRect: Rect
 ) {
+    val handleTap by rememberUpdatedState<(Offset) -> Unit> { tapOffset ->
+        when {
+            tapOffset.isOutsideCircle(getTargetCenter(), outerCircleRadius) -> onTargetCancel()
+            tapOffset.isInsideCircle(getTargetCenter(), targetRadius) -> onTargetClick()
+        }
+    }
     Box(modifier = Modifier.fillMaxSize()) {
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(tapTarget) {
-                    detectTapGestures { tapOffset ->
-                        when {
-                            tapOffset.isOutsideCircle(getTargetCenter(), outerCircleRadius) -> {
-                                // The user clicked outside the target
-                                onTargetCancel()
-                            }
-
-                            tapOffset.isInsideCircle(getTargetCenter(), targetRadius) -> {
-                                // The user clicked the target
-                                onTargetClick()
-                            }
-                        }
-                    }
+                .pointerInput(tapTarget.precedence) {
+                    detectTapGestures { tapOffset -> handleTap(tapOffset) }
                 }
         ) {
             drawCircle(
